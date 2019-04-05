@@ -95,13 +95,13 @@ DBQRCodeScanner *scanner = [[DBQRCodeScanner alloc] initWithPreview:yourPreviewV
 }];
 ```
 
-这里的`yourPreviewView`需要实现`DBQRCodePreview`协议，以供scanner回调。也可以直接使用**`DBQRCodePreviewView`,**进行配置属性即可。
+这里的`yourPreviewView`需要实现`DBQRCodePreview`协议，以供scanner回调。也可以直接使用`DBQRCodePreviewView`,进行配置属性即可。
 
 ```Objective-C
 DBQRCodePreviewView *preView = [[DBQRCodePreviewView alloc] initWithFrame:self.view.bounds];
-    preView.autoresizingMask = UIViewAutoresizingFlexibleHeight;
-    self.previewView = preView;
-    [self.view addSubview:preView];
+preView.autoresizingMask = UIViewAutoresizingFlexibleHeight;
+self.previewView = preView;
+[self.view addSubview:preView];
 ```
 
 **调用scanner之前请先申请相机权限。如果使用SDK内置界面，会自动申请。**
