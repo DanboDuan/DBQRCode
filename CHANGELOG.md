@@ -1,11 +1,15 @@
 # Upcoming
 
 
-# 1.0.0
+# 0.0.1
 
-*Released: xx/xx/2018*
+*Released: 04/05/2018*
 
 **Features:**
+
+1. QRCode、条形码生成
+2. 相机 QRCode、条形码识别
+3. 相册 QRCode、条形码识别
 
 **Changed:**
 
