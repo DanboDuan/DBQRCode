@@ -3,7 +3,7 @@
 
 # 0.0.1
 
-*Released: 04/05/2018*
+*Released: 04/05/2019*
 
 **Features:**
 
