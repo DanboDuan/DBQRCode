@@ -1,5 +1,5 @@
 #
-# Be sure to run `pod lib lint BDAutoTracker.podspec' to ensure this is a
+# Be sure to run `pod lib lint DBQRCode.podspec' to ensure this is a
 # valid spec before submitting.
 #
 # Any lines starting with a # are optional, but their use is encouraged
@@ -25,11 +25,12 @@ TODO: Add long description of the pod here.
   s.license          = { :type => 'MIT', :file => 'LICENSE' }
   s.author           = { 'bob' => 'bob170131@gmail.com' }
   s.source           = { :git => 'https://github.com/DanboDuan/DBQRCode.git', :tag => s.version.to_s }
-  s.ios.deployment_target = '9.0'
-  s.public_header_files = 'DBQRCode/*.h'
+  s.ios.deployment_target = '8.0'
+
   s.default_subspec = 'Core'
   s.requires_arc = true
-  s.frameworks = 'Foundation','UIKit','AVFoundation','CoreImage','CoreGraphics'
+  s.frameworks = 'Foundation','UIKit','AVFoundation','CoreImage','CoreGraphics', 'QuartzCore','CoreFoundation'
+
 
   s.subspec 'Utility' do |utility|
         utility.source_files = 'DBQRCode/Utility/**/*.{h,m,c}'
@@ -38,6 +39,10 @@ TODO: Add long description of the pod here.
   s.subspec 'Core' do |core|
       core.source_files = 'DBQRCode/Core/**/*.{h,m,c}'
       core.dependency 'DBQRCode/Utility'
+      core.public_header_files = 'DBQRCode/Core/Header/*.h'
+      core.resource_bundles = {
+        'DBQRCode' => ['DBQRCode/Assets/*.png']
+      }
   end
 
 end

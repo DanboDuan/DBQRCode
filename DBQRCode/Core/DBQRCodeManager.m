@@ -7,13 +7,21 @@
 
 #import "DBQRCodeManager.h"
 #import "DBImageHelper.h"
+#import "DBDeviceHelper.h"
 
 #import <CoreImage/CoreImage.h>
 
-static const NSString *DBInputCorrectionLevelL = @"L";//!< L: 7%
-static const NSString *DBInputCorrectionLevelM = @"M";//!< M: 15%
-static const NSString *DBInputCorrectionLevelQ = @"Q";//!< Q: 25%
-static const NSString *DBInputCorrectionLevelH = @"H";//!< H: 30%
+static NSString * const DBInputCorrectionLevelL = @"L";
+static NSString * const DBInputCorrectionLevelM = @"M";
+static NSString * const DBInputCorrectionLevelQ = @"Q";
+static NSString * const DBInputCorrectionLevelH = @"H";
+
+static NSString * const DBQRCodeGenerator = @"CIQRCodeGenerator";
+static NSString * const DBCode128BarcodeGenerator = @"CICode128BarcodeGenerator";
+
+static NSString * const DBInputMessage = @"inputMessage";
+static NSString * const DBInputCorrectionLevel = @"inputCorrectionLevel";
+static NSString * const DBInputQuietSpace = @"inputQuietSpace";
 
 @implementation DBQRCodeManager
 
@@ -21,9 +29,9 @@ static const NSString *DBInputCorrectionLevelH = @"H";//!< H: 30%
 
 + (UIImage *)generateQRCode:(NSString *)code size:(CGSize)size {
     NSData *codeData = [code dataUsingEncoding:NSUTF8StringEncoding];
-    CIFilter *filter = [CIFilter filterWithName:@"CIQRCodeGenerator"
-                            withInputParameters:@{@"inputMessage": codeData,
-                                                  @"inputCorrectionLevel": DBInputCorrectionLevelH}];
+    CIFilter *filter = [CIFilter filterWithName:DBQRCodeGenerator
+                            withInputParameters:@{DBInputMessage: codeData,
+                                                  DBInputCorrectionLevel: DBInputCorrectionLevelH}];
     UIImage *codeImage = [DBImageHelper scaleImage:filter.outputImage toSize:size];
 
     return codeImage;
@@ -37,14 +45,25 @@ static const NSString *DBInputCorrectionLevelH = @"H";//!< H: 30%
 }
 
 #pragma mark - 条形码
-+ (UIImage *)generateCode128:(NSString *)code size:(CGSize)size {
++ (UIImage *)generateBarCode:(NSString *)code size:(CGSize)size {
     NSData *codeData = [code dataUsingEncoding:NSUTF8StringEncoding];
-    CIFilter *filter = [CIFilter filterWithName:@"CICode128BarcodeGenerator"
-                            withInputParameters:@{@"inputMessage": codeData,
-                                                  @"inputQuietSpace": @.0}];
+    CIFilter *filter = [CIFilter filterWithName:DBCode128BarcodeGenerator
+                            withInputParameters:@{DBInputMessage: codeData,
+                                                  DBInputQuietSpace: @.0}];
     UIImage *codeImage = [DBImageHelper scaleImage:filter.outputImage toSize:size];
 
     return codeImage;
 }
 
++ (NSString *)detectQRCode:(UIImage *)image {
+    CIDetector*detector = [CIDetector detectorOfType:CIDetectorTypeQRCode context:nil options:@{CIDetectorAccuracy:CIDetectorAccuracyHigh}];
+    NSArray *features = [detector featuresInImage:[CIImage imageWithCGImage:image.CGImage]];
+    if (features.count >=1) {
+        CIQRCodeFeature *feature = [features firstObject];
+        
+        return feature.messageString;
+    }
+
+    return nil;
+}
 @end

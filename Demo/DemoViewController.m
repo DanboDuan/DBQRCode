@@ -7,6 +7,7 @@
 //
 
 #import "DemoViewController.h"
+#import <DBQRCode/DBQRCodeScanViewController.h>
 
 NSString * const CellReuseIdentifier = @"UITableViewCell_ri";
 
@@ -15,7 +16,7 @@ NSString * const CellReuseIdentifier = @"UITableViewCell_ri";
 
 @property (nonatomic, strong) NSString *title;
 @property (nonatomic, strong) NSString *actionVCName;
-@property (nonatomic, assign) NSInteger actionVC;
+@property (nonatomic, assign) NSInteger action;
 
 @end
 
@@ -42,6 +43,13 @@ static NSArray *testFeedList() {
         model;
     })];
 
+    [array addObject:({
+        FeedModel *model = [FeedModel new];
+        model.title = @"SDK scan VC";
+        model.action = 1;
+        model;
+    })];
+
     return array;
 }
 
@@ -58,6 +66,14 @@ static NSArray *testFeedList() {
     [self.tableView registerClass:[UITableViewCell class] forCellReuseIdentifier:CellReuseIdentifier];
     self.feedList = testFeedList();
     self.navigationItem.title = @"Demo";
+    self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"Setting" style:(UIBarButtonItemStylePlain) target:self action:@selector(clickRight)];
+}
+
+- (void)clickRight {
+    NSURL * url = [NSURL URLWithString:UIApplicationOpenSettingsURLString];
+    if([[UIApplication sharedApplication] canOpenURL:url]) {
+        [[UIApplication sharedApplication] openURL:url options:@{} completionHandler:nil];
+    }
 }
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
@@ -88,6 +104,11 @@ static NSArray *testFeedList() {
     if (model.actionVCName.length) {
         UIViewController *vc = (UIViewController *)[NSClassFromString(model.actionVCName) new];
         vc.navigationItem.title = model.title;
+        [self.navigationController pushViewController:vc animated:YES];
+    } else {
+        DBQRCodeScanViewController *vc = [[DBQRCodeScanViewController alloc] initWithCallback:^(NSString * _Nullable code, NSError * _Nullable error) {
+            NSLog(@"%@",code);
+        }];
         [self.navigationController pushViewController:vc animated:YES];
     }
 }

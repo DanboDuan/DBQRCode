@@ -1,31 +1,47 @@
 //
-//  ScanViewController.m
-//  Demo
+//  DBQRCodeScanViewController.m
+//  DBQRCode
 //
-//  Created by bob on 2019/3/31.
-//  Copyright © 2019 bob. All rights reserved.
+//  Created by bob on 2019/4/4.
 //
 
-#import "ScanViewController.h"
-#import <DBQRCode/DBQRCodeManager.h>
-#import <DBQRCode/DBQRCodePreviewView.h>
-#import <DBQRCode/DBQRCodeScanner.h>
-#import <Photos/PHPhotoLibrary.h>
+#import "DBQRCodeScanViewController.h"
+#import "DBQRCodeScanner.h"
+#import "DBQRCodePreviewView.h"
 
 #import <AVFoundation/AVFoundation.h>
+#import <Photos/PHPhotoLibrary.h>
 
-@interface ScanViewController ()<UINavigationControllerDelegate, UIImagePickerControllerDelegate>
+@interface DBQRCodeScanViewController ()
 
 @property (nonatomic, strong) DBQRCodeScanner *scanner;
 @property (nonatomic, strong) DBQRCodePreviewView *previewView;
+@property (nonatomic, copy) DBQRCodeScanCallback callback;
+
+@property (nonatomic, strong) UIImage *lastBackgroundImageForBarMetrics;
+@property (nonatomic, strong) UIImage *lastShadowImage;
 
 @end
 
-@implementation ScanViewController
+@implementation DBQRCodeScanViewController
+
+- (instancetype)initWithCallback:(DBQRCodeScanCallback)callback {
+    self = [super initWithNibName:nil bundle:[NSBundle bundleForClass:[DBQRCodeScanViewController class]]];
+    if (self) {
+        self.callback = callback;
+    }
+    
+    return self;
+}
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"相册" style:(UIBarButtonItemStylePlain) target:self action:@selector(clickRight)];
+    self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"相册"
+                                                                              style:(UIBarButtonItemStylePlain)
+                                                                             target:self
+                                                                             action:@selector(clickRight)];
+
+    self.navigationItem.title = @"二维码/条码";
 
     DBQRCodePreviewView *preView = [[DBQRCodePreviewView alloc] initWithFrame:self.view.bounds];
     preView.autoresizingMask = UIViewAutoresizingFlexibleHeight;
@@ -35,7 +51,19 @@
     [self requestCameraAccess];
 }
 
+-(void)viewWillAppear:(BOOL)animated{
+    [super viewWillAppear:animated];
+    self.lastBackgroundImageForBarMetrics = [self.navigationController.navigationBar backgroundImageForBarMetrics:UIBarMetricsDefault];
+    self.lastShadowImage = self.navigationController.navigationBar.shadowImage;
+
+    [self.navigationController.navigationBar setBackgroundImage:[UIImage new] forBarMetrics:UIBarMetricsDefault];
+    [self.navigationController.navigationBar setShadowImage:[UIImage new]];
+}
+
 - (void)viewWillDisappear:(BOOL)animated {
+    [self.navigationController.navigationBar setBackgroundImage:self.lastBackgroundImageForBarMetrics forBarMetrics:UIBarMetricsDefault];
+    [self.navigationController.navigationBar setShadowImage:self.lastShadowImage];
+
     [super viewWillDisappear:animated];
     [self.scanner stopScan];
 }
@@ -46,7 +74,7 @@
             if (granted) {
                 [self loadScanView];
             } else {
-                [self requestAccessWithTitle:@"扫码二维码需要相机权限，是否重新设置？"];
+                [self requestAccessWithTitle:@"扫面二维码需要相机权限，是否重新设置？"];
             }
         });
     }];
@@ -55,28 +83,31 @@
 - (void)loadScanView {
     DBQRCodeScanner *scanner = [[DBQRCodeScanner alloc] initWithPreview:self.previewView];
     [scanner scanWithCallback:^(NSString *code, NSError *error) {
-        NSLog(@"%@",code);
+        if (self.callback) {
+            self.callback(code, error);
+        }
         [self.navigationController popViewControllerAnimated:YES];
     }];
     self.scanner = scanner;
 }
 
-#pragma mark - 相册
+#pragma mark - button
 
 - (void)clickRight {
-
     [PHPhotoLibrary requestAuthorization:^(PHAuthorizationStatus status) {
         switch (status) {
-            case PHAuthorizationStatusAuthorized: //已获取权限
+            case PHAuthorizationStatusAuthorized:
                 break;
-            default://其他。。。
+            default:
                 [self requestAccessWithTitle:@"需要相册权限，是否重新设置？"];
                 return;
         }
     }];
 
     [self.scanner scanAlbumWithRooter:self callback:^(NSString * _Nullable code, NSError * _Nullable error) {
-        NSLog(@"code %@",code);
+        if (self.callback) {
+            self.callback(code, error);
+        }
         [self.navigationController popViewControllerAnimated:YES];
     }];
 }
@@ -89,7 +120,11 @@
     UIAlertAction *confimAction = [UIAlertAction actionWithTitle:@"设置" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
         NSURL * url = [NSURL URLWithString:UIApplicationOpenSettingsURLString];
         if([[UIApplication sharedApplication] canOpenURL:url]) {
-            [[UIApplication sharedApplication] openURL:url options:@{} completionHandler:nil];
+            if (@available(iOS 10.0, *)) {
+                [[UIApplication sharedApplication] openURL:url options:@{} completionHandler:nil];
+            } else {
+                [[UIApplication sharedApplication] openURL:url];
+            }
         }
     }];
     [alertController addAction:cancelAction];
@@ -98,3 +133,4 @@
 }
 
 @end
+

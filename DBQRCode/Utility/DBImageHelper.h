@@ -15,7 +15,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (UIImage *)combinateCodeImage:(UIImage *)codeImage andLogo:(UIImage *)logo;
 
-+ (void)switchTorch:(BOOL)on;
 
 @end
 
